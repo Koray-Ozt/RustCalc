@@ -6,4 +6,6 @@ edition = "2024"
 [dependencies]
 ferrite-core = { git = "https://github.com/Koray-Ozt/FerriteDB.git", rev = "da67e8b6079493e915191efb82d8ed0538306f71" }
 gtk = { version = "0.18", package = "gtk" }
+serde = { version = "1.0", features = ["derive"] }
 serde_json = "1"
+

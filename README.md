@@ -8,12 +8,13 @@ A deliberately small Rust desktop calculator that demonstrates how to embed [Fer
 
 - adding `ferrite-core` as a Git dependency;
 - opening or creating a local FerriteDB database;
-- writing JSON values with `put_key`;
-- reading an ordered group of records with `list` and a key prefix;
-- retaining calculator history across application restarts;
-- keeping the database handle alive for the lifetime of a GTK desktop application.
-
-The calculator supports addition, subtraction, multiplication, division, decimal input, and division-by-zero validation. Its three most recent calculations are displayed above the keypad.
+- writing structured JSON data with `put_key` (`{ id, left, operator, right, result, timestamp }`);
+- storing and retrieving user configuration settings (`settings/language`);
+- deleting records with `delete_key` to clear history on disk;
+- calculating usage statistics and analytics over stored records;
+- multi-language support (English, Turkish, Russian) persisted in FerriteDB;
+- full keyboard navigation and shortcut handling;
+- modern GTK desktop interface with real-time formula expression preview.
 
 ## FerriteDB usage
 
@@ -22,6 +23,7 @@ FerriteDB is pinned to a known commit because its crates are not currently publi
 ```toml
 [dependencies]
 ferrite-core = { git = "https://github.com/Koray-Ozt/FerriteDB.git", rev = "da67e8b6079493e915191efb82d8ed0538306f71" }
+serde = { version = "1.0", features = ["derive"] }
 serde_json = "1"
 ```
 
@@ -35,34 +37,49 @@ use ferrite_core::Database;
 let db = Database::open("data/history.ferrite")?;
 ```
 
-FerriteDB uses an exclusive writer lock, so the application keeps one database handle open and shares access to it through its own `HistoryStore`.
+### 2. Store structured JSON data and settings
 
-### 2. Store JSON data
-
-Every completed calculation is stored as JSON under an ordered `history/` key:
+Calculation history entries and application settings are saved as JSON:
 
 ```rust
-use serde_json::json;
+// Store calculation record
+let entry = HistoryEntry {
+    id: "history/00000000172350000000_0".into(),
+    left: 8.0,
+    operator: Operator::Divide,
+    right: 2.0,
+    result: 4.0,
+    timestamp: 1723500000000,
+};
+db.put_key(&entry.id, serde_json::to_value(&entry)?)?;
 
-let key = "history/00000000000000000000";
-db.put_key(key, json!({ "text": "8 ÷ 2 = 4" }))?;
+// Store language preference
+db.put_key("settings/language", serde_json::to_value("en")?)?;
 ```
 
-A successful strict write is appended to FerriteDB's WAL and synchronized before returning.
+### 3. Clear history with `delete_key`
 
-### 3. Read the history
-
-Prefix listing retrieves only calculator-history records:
+Deleting all calculation history keys from FerriteDB:
 
 ```rust
-let entries = db
+let keys: Vec<String> = db
     .list(Some("history/"))?
     .into_iter()
-    .filter_map(|(_, value)| value.get("text")?.as_str().map(str::to_owned))
-    .collect::<Vec<_>>();
+    .map(|(k, _)| k)
+    .collect();
+
+for key in keys {
+    db.delete_key(&key)?;
+}
 ```
 
-The zero-padded keys preserve insertion order in FerriteDB's ordered key space. The complete integration is in [`src/lib.rs`](src/lib.rs), while [`tests/history.rs`](tests/history.rs) verifies persistence after closing and reopening the database.
+## Shortcuts
+
+- **Digits / Decimals:** `0`-`9`, `,`, `.`
+- **Operators:** `+`, `-`, `*`, `/`
+- **Calculate:** `Enter`, `Numpad Enter`, `=`
+- **Clear / Backspace:** `Escape`, `c`, `BackSpace`
+- **History & Analytics:** `Ctrl+H`, `h`
 
 ## Requirements
 
@@ -98,23 +115,20 @@ cargo fmt --all --check
 cargo clippy --all-targets -- -D warnings
 ```
 
-The persistence test exercises a real FerriteDB database and confirms that a recorded calculation survives a restart.
-
 ## Project layout
 
 ```text
-src/lib.rs          Calculator logic and FerriteDB-backed HistoryStore
-src/main.rs         GTK desktop interface
-tests/calculator.rs Calculator behavior tests
-tests/history.rs    FerriteDB restart/persistence test
+src/lib.rs          Calculator logic, i18n dictionary, and FerriteDB HistoryStore
+src/main.rs         GTK desktop interface, keyboard listener, and stats modal
+tests/calculator.rs Calculator and i18n behavior tests
+tests/history.rs    FerriteDB restart, clear, and language persistence tests
 ```
 
 ## Scope and limitations
 
 - This example uses FerriteDB's Rust core directly rather than its sidecar protocol.
-- History records are append-only and there is no history-management interface.
 - The dependency is commit-pinned while FerriteDB's API remains unstable.
 - FerriteDB and RustCalc currently provide no production-readiness guarantee.
 - This repository currently has no license file; public visibility does not grant permission to copy, modify, or redistribute its contents.
 
-For FerriteDB's architecture, CLI, sidecar protocol, TypeScript SDK, and current limitations, see the [FerriteDB repository](https://github.com/Koray-Ozt/FerriteDB) and its [getting-started guide](https://github.com/Koray-Ozt/FerriteDB/blob/main/docs/GETTING_STARTED.md).
+For FerriteDB's architecture, CLI, sidecar protocol, TypeScript SDK, and current limitations, see the [FerriteDB repository](https://github.com/Koray-Ozt/FerriteDB).

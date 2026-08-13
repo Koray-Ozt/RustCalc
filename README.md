@@ -2,7 +2,7 @@
 
 A deliberately small Rust desktop calculator that demonstrates how to embed [FerriteDB](https://github.com/Koray-Ozt/FerriteDB) in a real application.
 
-> **Example project:** RustCalc is intended as a compact FerriteDB usage example, not as a feature-complete calculator. FerriteDB is currently an unaudited MVP with an unstable API and on-disk format; do not use it for production or irreplaceable data.
+> **Example project:** RustCalc is intended as a compact FerriteDB usage example, not as a feature-complete calculator. FerriteDB is currently an unaudited beta; do not use it for production, security-critical workloads, or irreplaceable data.
 
 ## What this example shows
 
@@ -18,11 +18,11 @@ A deliberately small Rust desktop calculator that demonstrates how to embed [Fer
 
 ## FerriteDB usage
 
-FerriteDB is pinned to a known commit because its crates are not currently published to crates.io:
+FerriteDB is pinned to its first public beta tag because its Rust crates are not currently published to crates.io:
 
 ```toml
 [dependencies]
-ferrite-core = { git = "https://github.com/Koray-Ozt/FerriteDB.git", rev = "da67e8b6079493e915191efb82d8ed0538306f71" }
+ferrite-core = { git = "https://github.com/Koray-Ozt/FerriteDB.git", tag = "v0.1.0-beta.1" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1"
 ```
@@ -95,17 +95,29 @@ sudo apt install libgtk-3-dev
 
 ## Run
 
+The easiest installation on Ubuntu 24.04 or Linux Mint 22 is the `.deb` package attached to the latest [GitHub prerelease](https://github.com/Koray-Ozt/RustCalc/releases):
+
+```bash
+sudo apt install ./rust-calc_0.1.0-alpha.2_amd64.deb
+```
+
+Alternatively, run from source:
+
 ```bash
 git clone https://github.com/Koray-Ozt/RustCalc.git
 cd RustCalc
 cargo run --release
 ```
 
-By default, history is stored in `data/history.ferrite`. Override the location with:
+By default, history is stored in `$XDG_DATA_HOME/rust-calc/history.ferrite`, or `~/.local/share/rust-calc/history.ferrite` when `XDG_DATA_HOME` is unset. Override the location with:
 
 ```bash
 RUST_CALC_DATA=/tmp/rust-calc-data cargo run --release
 ```
+
+### Upgrading from alpha.1
+
+FerriteDB beta intentionally refuses to open the unversioned alpha database format. RustCalc now uses a new format-1 database under the platform data directory and leaves the previous repository-relative `data/history.ferrite` untouched. Calculation history from alpha.1 is not migrated automatically.
 
 ## Verify
 
@@ -113,6 +125,7 @@ RUST_CALC_DATA=/tmp/rust-calc-data cargo run --release
 cargo test --all-targets
 cargo fmt --all --check
 cargo clippy --all-targets -- -D warnings
+cargo build --release
 ```
 
 ## Project layout
@@ -121,14 +134,18 @@ cargo clippy --all-targets -- -D warnings
 src/lib.rs          Calculator logic, i18n dictionary, and FerriteDB HistoryStore
 src/main.rs         GTK desktop interface, keyboard listener, and stats modal
 tests/calculator.rs Calculator and i18n behavior tests
+tests/data_path.rs  Platform data-directory resolution tests
 tests/history.rs    FerriteDB restart, clear, and language persistence tests
+scripts/            Reproducible Linux release packaging
+packaging/          Desktop integration metadata
 ```
 
 ## Scope and limitations
 
 - This example uses FerriteDB's Rust core directly rather than its sidecar protocol.
-- The dependency is commit-pinned while FerriteDB's API remains unstable.
+- The dependency is tag-pinned while FerriteDB's Rust API remains unstable.
 - FerriteDB and RustCalc currently provide no production-readiness guarantee.
 - This repository currently has no license file; public visibility does not grant permission to copy, modify, or redistribute its contents.
+- Binary packages include Debian copyright metadata, FerriteDB attribution, and complete bundled dependency license texts.
 
 For FerriteDB's architecture, CLI, sidecar protocol, TypeScript SDK, and current limitations, see the [FerriteDB repository](https://github.com/Koray-Ozt/FerriteDB).

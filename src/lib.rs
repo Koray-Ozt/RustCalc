@@ -1,6 +1,6 @@
 use ferrite_core::Database;
 use serde::{Deserialize, Serialize};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -197,6 +197,22 @@ pub fn format_number(value: f64) -> String {
     }
 
     value.to_string().replace('.', ",")
+}
+
+pub fn resolve_database_path(
+    explicit: Option<PathBuf>,
+    xdg_data_home: Option<PathBuf>,
+    home: Option<PathBuf>,
+) -> PathBuf {
+    if let Some(path) = explicit {
+        return path;
+    }
+
+    let data_home = xdg_data_home
+        .filter(|path| path.is_absolute())
+        .or_else(|| home.map(|path| path.join(".local/share")))
+        .unwrap_or_else(|| PathBuf::from("data"));
+    data_home.join("rust-calc/history.ferrite")
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

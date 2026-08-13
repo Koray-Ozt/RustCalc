@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=RustCalc
+Comment=GTK calculator with FerriteDB history
+Exec=rust-calc
+Icon=accessories-calculator
+Terminal=false
+Categories=Utility;Calculator;
+Keywords=calculator;ferritedb;
+StartupNotify=true

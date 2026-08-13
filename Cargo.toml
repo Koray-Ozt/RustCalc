@@ -1,11 +1,15 @@
 [package]
 name = "rust-calc"
-version = "0.1.0-alpha.1"
+version = "0.1.0-alpha.2"
+description = "A GTK calculator demonstrating embedded FerriteDB persistence"
+repository = "https://github.com/Koray-Ozt/RustCalc"
+readme = "README.md"
+publish = false
 
 edition = "2024"
 
 [dependencies]
-ferrite-core = { git = "https://github.com/Koray-Ozt/FerriteDB.git", rev = "da67e8b6079493e915191efb82d8ed0538306f71" }
+ferrite-core = { git = "https://github.com/Koray-Ozt/FerriteDB.git", tag = "v0.1.0-beta.1" }
 gtk = { version = "0.18", package = "gtk" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1"

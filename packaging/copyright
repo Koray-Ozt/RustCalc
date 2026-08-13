@@ -1,0 +1,22 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: RustCalc
+Source: https://github.com/Koray-Ozt/RustCalc
+
+Files: *
+Copyright: 2026 Koray Öztürk
+License: Proprietary
+ RustCalc has no public open-source license. Distribution of the official
+ binary package by the copyright holder does not grant permission to copy,
+ modify, or redistribute RustCalc beyond rights provided by applicable law.
+
+Files: ferrite-core
+Copyright: 2026 Koray Öztürk
+License: FSL-1.1-ALv2
+ The complete FerriteDB license text is included in
+ /usr/share/doc/rust-calc/THIRD_PARTY_LICENSES.md.
+
+Files: bundled Rust dependencies
+Copyright: Their respective authors and contributors
+License: Various permissive licenses
+ The complete dependency license texts and declared SPDX expressions are
+ included in /usr/share/doc/rust-calc/THIRD_PARTY_LICENSES.md.

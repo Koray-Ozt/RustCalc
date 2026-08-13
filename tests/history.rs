@@ -21,6 +21,21 @@ fn calculation_history_survives_a_restart() {
 }
 
 #[test]
+fn new_databases_use_the_versioned_ferritedb_format() {
+    let path = temp_dir("versioned-format");
+    let _ = std::fs::remove_dir_all(&path);
+
+    let history = HistoryStore::open(&path).unwrap();
+    drop(history);
+
+    let manifest: serde_json::Value =
+        serde_json::from_slice(&std::fs::read(path.join("format.json")).unwrap()).unwrap();
+    assert_eq!(manifest, serde_json::json!({ "format": 1 }));
+
+    std::fs::remove_dir_all(path).unwrap();
+}
+
+#[test]
 fn history_clear_and_stats() {
     let path = temp_dir("history-stats");
     let _ = std::fs::remove_dir_all(&path);

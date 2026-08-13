@@ -5,7 +5,9 @@ use gtk::{
     Application, ApplicationWindow, Box as GtkBox, Button, ComboBoxText, Entry, Grid, Label,
     Orientation,
 };
-use rust_calc::{HistoryStore, I18n, Language, Operator, calculate, format_number};
+use rust_calc::{
+    HistoryStore, I18n, Language, Operator, calculate, format_number, resolve_database_path,
+};
 use std::cell::RefCell;
 use std::path::PathBuf;
 use std::rc::Rc;
@@ -611,9 +613,11 @@ fn refresh_history(label: &Label, entries: &[String], lang: Language) {
 }
 
 fn database_path() -> PathBuf {
-    std::env::var_os("RUST_CALC_DATA")
-        .map(PathBuf::from)
-        .unwrap_or_else(|| PathBuf::from("data/history.ferrite"))
+    resolve_database_path(
+        std::env::var_os("RUST_CALC_DATA").map(PathBuf::from),
+        std::env::var_os("XDG_DATA_HOME").map(PathBuf::from),
+        std::env::var_os("HOME").map(PathBuf::from),
+    )
 }
 
 fn install_css() {

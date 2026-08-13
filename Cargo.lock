@@ -80,8 +80,8 @@ checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
 
 [[package]]
 name = "ferrite-core"
-version = "0.1.0"
-source = "git+https://github.com/Koray-Ozt/FerriteDB.git?rev=da67e8b6079493e915191efb82d8ed0538306f71#da67e8b6079493e915191efb82d8ed0538306f71"
+version = "0.1.0-beta.1"
+source = "git+https://github.com/Koray-Ozt/FerriteDB.git?tag=v0.1.0-beta.1#f0838c2a98fca07034c0cbe1b6f01f39885cc84b"
 dependencies = [
  "fs2",
  "libc",
@@ -533,7 +533,7 @@ dependencies = [
 
 [[package]]
 name = "rust-calc"
-version = "0.1.0-alpha.1"
+version = "0.1.0-alpha.2"
 dependencies = [
  "ferrite-core",
  "gtk",

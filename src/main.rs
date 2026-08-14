@@ -42,6 +42,7 @@ fn build_ui(app: &Application) {
 
     let history_label = Label::new(None);
     history_label.set_xalign(0.0);
+    history_label.set_yalign(0.0);
     history_label.set_widget_name("history");
     refresh_history(
         &history_label,
@@ -61,11 +62,12 @@ fn build_ui(app: &Application) {
     display.set_widget_name("display");
 
     let grid = Grid::builder()
-        .row_spacing(10)
-        .column_spacing(10)
+        .row_spacing(8)
+        .column_spacing(8)
         .column_homogeneous(true)
         .row_homogeneous(true)
         .build();
+    grid.style_context().add_class("keypad");
 
     for (label, col, row) in [
         ("7", 0, 0),
@@ -81,6 +83,7 @@ fn build_ui(app: &Application) {
         (",", 1, 3),
     ] {
         let button = Button::with_label(label);
+        button.style_context().add_class("digit");
         let display = display.clone();
         let state = state.clone();
         button.connect_clicked(move |_| append_digit(&display, &state, label));
@@ -140,8 +143,8 @@ fn build_ui(app: &Application) {
     let window = ApplicationWindow::builder()
         .application(app)
         .title(I18n::app_title(initial_lang))
-        .default_width(360)
-        .default_height(620)
+        .default_width(390)
+        .default_height(700)
         .resizable(false)
         .build();
 
@@ -162,19 +165,22 @@ fn build_ui(app: &Application) {
         );
     });
 
-    // Language Selector Header Bar
-    let lang_box = GtkBox::new(Orientation::Horizontal, 8);
-    lang_box.set_halign(gtk::Align::End);
-
     let lang_combo = ComboBoxText::new();
     lang_combo.style_context().add_class("lang-combo");
+    lang_combo.set_tooltip_text(Some("Language / Dil / Язык"));
+    lang_combo.set_size_request(128, -1);
     for lang in Language::all() {
         lang_combo.append(Some(lang.code()), lang.display_name());
     }
     lang_combo.set_active_id(Some(initial_lang.code()));
 
+    let history_eyebrow = Label::new(Some(I18n::recent_operations(initial_lang)));
+    history_eyebrow.set_xalign(0.0);
+    history_eyebrow.style_context().add_class("eyebrow");
+
     let history_lang_store = history.clone();
     let history_lang_label = history_label.clone();
+    let history_lang_eyebrow = history_eyebrow.clone();
     let history_lang_btn = history_btn.clone();
     let window_lang = window.clone();
 
@@ -185,6 +191,7 @@ fn build_ui(app: &Application) {
                 eprintln!("Dil kaydedilemedi: {e}");
             }
             window_lang.set_title(I18n::app_title(new_lang));
+            history_lang_eyebrow.set_text(I18n::recent_operations(new_lang));
             history_lang_btn.set_label(I18n::history_btn_label(new_lang));
             refresh_history(
                 &history_lang_label,
@@ -194,20 +201,40 @@ fn build_ui(app: &Application) {
         }
     });
 
-    lang_box.pack_start(&lang_combo, false, false, 0);
+    let brand_mark = Label::new(Some("R"));
+    brand_mark.style_context().add_class("brand-mark");
 
-    let top_bar = GtkBox::new(Orientation::Horizontal, 8);
-    top_bar.pack_start(&history_label, true, true, 0);
-    top_bar.pack_start(&lang_box, false, false, 0);
+    let brand_copy = GtkBox::new(Orientation::Vertical, 0);
+    let brand_title = Label::new(Some("RUSTCALC"));
+    brand_title.set_xalign(0.0);
+    brand_title.style_context().add_class("brand-title");
+    let brand_subtitle = Label::new(Some("FERRITEDB  •  LOCAL WAL"));
+    brand_subtitle.set_xalign(0.0);
+    brand_subtitle.style_context().add_class("brand-subtitle");
+    brand_copy.pack_start(&brand_title, false, false, 0);
+    brand_copy.pack_start(&brand_subtitle, false, false, 0);
+
+    let brand_bar = GtkBox::new(Orientation::Horizontal, 10);
+    brand_bar.style_context().add_class("brand-bar");
+    brand_bar.pack_start(&brand_mark, false, false, 0);
+    brand_bar.pack_start(&brand_copy, true, true, 0);
+    brand_bar.pack_start(&lang_combo, false, false, 0);
+
+    let history_box = GtkBox::new(Orientation::Vertical, 4);
+    history_box.pack_start(&history_eyebrow, false, false, 0);
+    history_box.pack_start(&history_label, true, true, 0);
 
     let display_box = GtkBox::new(Orientation::Vertical, 4);
+    display_box.style_context().add_class("display-panel");
+    display_box.pack_start(&history_box, true, true, 0);
     display_box.pack_start(&formula_label, false, false, 0);
     display_box.pack_start(&display, false, false, 0);
 
-    let content = GtkBox::new(Orientation::Vertical, 14);
-    content.set_border_width(18);
-    content.pack_start(&top_bar, false, false, 0);
-    content.pack_start(&display_box, false, false, 0);
+    let content = GtkBox::new(Orientation::Vertical, 12);
+    content.set_border_width(16);
+    content.style_context().add_class("app-shell");
+    content.pack_start(&brand_bar, false, false, 0);
+    content.pack_start(&display_box, true, true, 0);
     content.pack_start(&grid, true, true, 0);
     content.pack_start(&history_btn, false, false, 0);
 
@@ -376,6 +403,9 @@ fn show_history_dialog(
         &[(I18n::close(lang), gtk::ResponseType::Close)],
     );
     dialog.set_default_size(380, 460);
+    if let Some(close_button) = dialog.widget_for_response(gtk::ResponseType::Close) {
+        close_button.style_context().add_class("dialog-close");
+    }
 
     let content_area = dialog.content_area();
     content_area.set_spacing(14);
@@ -623,28 +653,42 @@ fn database_path() -> PathBuf {
 fn install_css() {
     let css = gtk::CssProvider::new();
     css.load_from_data(
-        b"window { background-color: #12151c; color: #f8fafc; }\n\
-          label#history { color: #64748b; font-size: 12px; min-height: 52px; }\n\
-          label#formula { color: #94a3b8; font-size: 15px; font-weight: 500; min-height: 22px; margin-right: 4px; }\n\
-          combobox.lang-combo { background-color: #1e293b; color: #cbd5e1; border-radius: 6px; font-size: 12px; }\n\
-          entry#display { font-size: 38px; font-weight: 600; color: #f8fafc; background-color: #0f1218; border: 1px solid #1e293b; border-radius: 12px; padding: 12px 16px; }\n\
-          button { font-size: 20px; font-weight: 500; min-height: 54px; border-radius: 12px; background-color: #242b38; color: #f1f5f9; border: none; }\n\
-          button:hover { background-color: #2d3646; }\n\
-          button:active { background-color: #384356; }\n\
-          button.operator { background-color: #1e293b; color: #38bdf8; font-weight: 600; }\n\
-          button.operator:hover { background-color: #2563eb; color: #ffffff; }\n\
-          button.clear-btn { background-color: #2e1d24; color: #f87171; font-weight: 600; }\n\
-          button.clear-btn:hover { background-color: #451a23; }\n\
-          button.equals { background-color: #2563eb; color: #ffffff; font-weight: 700; }\n\
-          button.equals:hover { background-color: #1d4ed8; }\n\
-          button.history-btn { font-size: 13px; font-weight: 500; min-height: 40px; background-color: #1e293b; color: #cbd5e1; border-radius: 8px; }\n\
-          button.history-btn:hover { background-color: #334155; }\n\
-          .stats-card { background-color: #1a1e28; border: 1px solid #334155; border-radius: 10px; padding: 12px; color: #cbd5e1; }\n\
-          .history-list { background-color: #12151c; border-radius: 8px; }\n\
-          .history-item-text { font-family: monospace; font-size: 14px; color: #e2e8f0; }\n\
-          .empty-label { color: #64748b; font-size: 13px; }\n\
-          button.destructive-action { background-color: #dc2626; color: white; font-size: 14px; font-weight: 600; min-height: 42px; border-radius: 8px; }\n\
-          button.destructive-action:hover { background-color: #b91c1c; }",
+        b"window { background-color: #080c0f; color: #f5e8d8; }\n\
+          .app-shell { background-color: #080c0f; }\n\
+          .brand-bar { min-height: 38px; }\n\
+          .brand-mark { min-width: 34px; min-height: 34px; border-radius: 18px; border: 1px solid #d59a64; background-image: linear-gradient(to bottom, #493326, #201a18); color: #ffd8a8; font-size: 18px; font-weight: 800; }\n\
+          .brand-title { color: #f0c89d; font-size: 15px; font-weight: 800; }\n\
+          .brand-subtitle { color: #609a99; font-size: 9px; font-weight: 700; }\n\
+          .display-panel { min-height: 142px; padding: 12px 14px; border-radius: 14px; border: 1px solid #2c7775; background-image: linear-gradient(145deg, #112326, #0b1418 70%); box-shadow: inset 0 1px rgba(117, 220, 211, 0.12), 0 3px 8px rgba(0, 0, 0, 0.35); }\n\
+          .eyebrow { color: #5b9f9d; font-size: 9px; font-weight: 800; }\n\
+          label#history { color: #b9c8c3; font-family: monospace; font-size: 11px; min-height: 48px; }\n\
+          label#formula { color: #c08d62; font-size: 13px; font-weight: 600; min-height: 18px; margin-right: 3px; }\n\
+          combobox.lang-combo button { min-height: 34px; padding: 0 10px; border-radius: 8px; border: 1px solid #29494a; background-image: linear-gradient(to bottom, #1a292d, #10181c); color: #d8d7cd; font-size: 11px; font-weight: 600; }\n\
+          combobox.lang-combo button:hover { border-color: #4a8c89; background-image: linear-gradient(to bottom, #20373a, #142125); }\n\
+          entry#display { font-size: 38px; font-weight: 700; color: #ffe0b8; caret-color: transparent; background: transparent; border: none; box-shadow: none; padding: 2px 0 0 0; text-shadow: 0 1px #5c3525; }\n\
+          .keypad { margin-top: 1px; }\n\
+          button { font-size: 20px; font-weight: 600; min-height: 52px; border-radius: 10px; border: 1px solid #3a4c4f; background-image: linear-gradient(to bottom, #2a3437, #151b1f 72%); color: #f4d8b6; box-shadow: inset 0 1px rgba(255, 255, 255, 0.12), 0 2px 3px rgba(0, 0, 0, 0.55); text-shadow: 0 1px #3e261c; }\n\
+          button:hover { border-color: #6a9b96; background-image: linear-gradient(to bottom, #354448, #1c2529 72%); }\n\
+          button:active { background-image: linear-gradient(to bottom, #12191c, #273236); box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.5); }\n\
+          button:focus { border-color: #76d5ce; box-shadow: 0 0 0 1px rgba(118, 213, 206, 0.35); }\n\
+          button.operator { border-color: #356c6c; color: #72d7d2; font-weight: 700; }\n\
+          button.operator:hover { border-color: #62bcb7; color: #b9fffa; }\n\
+          button.clear-btn { border-color: #7a3341; background-image: linear-gradient(to bottom, #521d2a, #260f18); color: #ff8798; font-weight: 700; text-shadow: none; }\n\
+          button.clear-btn:hover { border-color: #b6495d; background-image: linear-gradient(to bottom, #6b2636, #35131f); }\n\
+          button.equals { min-height: 58px; border-color: #eeaa70; background-image: linear-gradient(to right, #6f3e29, #b66d43 50%, #6f3e29); color: #fff4e7; font-weight: 800; box-shadow: inset 0 1px rgba(255, 232, 201, 0.5), 0 2px 5px rgba(0, 0, 0, 0.55); }\n\
+          button.equals:hover { border-color: #ffd0a0; background-image: linear-gradient(to right, #855038, #ce8253 50%, #855038); }\n\
+          button.history-btn { font-size: 12px; font-weight: 600; min-height: 40px; border-radius: 9px; border-color: #29494a; background-image: linear-gradient(to bottom, #18272b, #0e171b); color: #b8cfca; text-shadow: none; }\n\
+          button.history-btn:hover { border-color: #4d8f8b; color: #e4f4ef; }\n\
+          dialog, dialog box { background-color: #0b1115; color: #eadfce; }\n\
+          button.dialog-close { min-height: 36px; padding: 0 18px; border-radius: 8px; border-color: #3c5557; font-size: 13px; font-weight: 600; text-shadow: none; }\n\
+          .stats-card { background-image: linear-gradient(145deg, #142427, #0d171a); border: 1px solid #356c6c; border-radius: 10px; padding: 12px; color: #c7d6d1; }\n\
+          .history-list { background-color: #0a1013; border: 1px solid #24393b; border-radius: 8px; }\n\
+          .history-list row:hover { background-color: #172629; }\n\
+          .history-list row:selected { background-color: #234345; color: #fff0dc; }\n\
+          .history-item-text { font-family: monospace; font-size: 14px; color: #eed5b8; }\n\
+          .empty-label { color: #718b89; font-size: 13px; }\n\
+          button.destructive-action { background-image: linear-gradient(to bottom, #5b202d, #35131c); border-color: #8b394a; color: #ffacb8; font-size: 13px; font-weight: 700; min-height: 40px; border-radius: 8px; text-shadow: none; }\n\
+          button.destructive-action:hover { border-color: #c55268; background-image: linear-gradient(to bottom, #732a3a, #431923); }",
     )
     .expect("CSS yüklenemedi");
     gtk::StyleContext::add_provider_for_screen(

@@ -4,6 +4,15 @@ A deliberately small Rust desktop calculator that demonstrates how to embed [Fer
 
 > **Example project:** RustCalc is intended as a compact FerriteDB usage example, not as a feature-complete calculator. FerriteDB is currently an unaudited beta; do not use it for production, security-critical workloads, or irreplaceable data.
 
+## Interface
+
+<p align="center">
+  <img src="docs/screenshots/calculator.png" alt="RustCalc calculator with recent operations and a ferrite-inspired dark interface" width="380">
+  <img src="docs/screenshots/history.png" alt="RustCalc FerriteDB history and usage analytics dialog" width="380">
+</p>
+
+<p align="center"><sub>Calculator workspace and FerriteDB-backed history analytics.</sub></p>
+
 ## What this example shows
 
 - adding `ferrite-core` as a Git dependency;
@@ -133,6 +142,7 @@ cargo build --release
 ```text
 src/lib.rs          Calculator logic, i18n dictionary, and FerriteDB HistoryStore
 src/main.rs         GTK desktop interface, keyboard listener, and stats modal
+docs/screenshots/   Current calculator and history interface screenshots
 tests/calculator.rs Calculator and i18n behavior tests
 tests/data_path.rs  Platform data-directory resolution tests
 tests/history.rs    FerriteDB restart, clear, and language persistence tests

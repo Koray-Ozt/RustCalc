@@ -85,9 +85,17 @@ impl I18n {
 
     pub fn history_btn_label(lang: Language) -> &'static str {
         match lang {
-            Language::Turkish => "📜 Geçmiş & İstatistikler (Ctrl+H)",
-            Language::English => "📜 History & Stats (Ctrl+H)",
-            Language::Russian => "📜 История и статистика (Ctrl+H)",
+            Language::Turkish => "Geçmiş & İstatistikler   Ctrl+H",
+            Language::English => "History & Stats   Ctrl+H",
+            Language::Russian => "История и статистика   Ctrl+H",
+        }
+    }
+
+    pub fn recent_operations(lang: Language) -> &'static str {
+        match lang {
+            Language::Turkish => "SON İŞLEMLER",
+            Language::English => "RECENT OPERATIONS",
+            Language::Russian => "ПОСЛЕДНИЕ ОПЕРАЦИИ",
         }
     }
 
@@ -101,9 +109,9 @@ impl I18n {
 
     pub fn analytics_title(lang: Language) -> &'static str {
         match lang {
-            Language::Turkish => "📊 FerriteDB Kullanım Analitiği",
-            Language::English => "📊 FerriteDB Usage Analytics",
-            Language::Russian => "📊 Аналитика использования FerriteDB",
+            Language::Turkish => "FerriteDB Kullanım Analitiği",
+            Language::English => "FerriteDB Usage Analytics",
+            Language::Russian => "Аналитика использования FerriteDB",
         }
     }
 
@@ -149,9 +157,9 @@ impl I18n {
 
     pub fn clear_history(lang: Language) -> &'static str {
         match lang {
-            Language::Turkish => "🗑️ Geçmişi Sıfırla",
-            Language::English => "🗑️ Clear History",
-            Language::Russian => "🗑️ Очистить историю",
+            Language::Turkish => "Geçmişi Sıfırla",
+            Language::English => "Clear History",
+            Language::Russian => "Очистить историю",
         }
     }
 
